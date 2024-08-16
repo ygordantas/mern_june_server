@@ -5,7 +5,7 @@ date.setMonth(currentMonth - 3);
 
 const dummyProducts = [
   {
-    id: "1",
+    id: 1,
     name: "Product 1",
     price: 100,
     postedBy: "User@email.com",
@@ -15,7 +15,7 @@ const dummyProducts = [
     ],
   },
   {
-    id: "2",
+    id: 2,
     name: "Product 2",
     price: 200,
     postedBy: "User2@email.com",
@@ -25,7 +25,7 @@ const dummyProducts = [
     ],
   },
   {
-    id: "3",
+    id: 3,
     name: "Product 3",
     price: 300,
     postedBy: "anotny@email.com",
@@ -38,7 +38,7 @@ const dummyProducts = [
     ],
   },
   {
-    id: "4",
+    id: 4,
     name: "Book",
     price: 10.99,
     postedBy: "anotny@email.com",
@@ -49,7 +49,7 @@ const dummyProducts = [
     ],
   },
   {
-    id: "5",
+    id: 5,
     name: "Product 5",
     price: 3.15,
     postedBy: "anotny@email.com",
