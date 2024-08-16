@@ -1,8 +1,13 @@
 import bodyParser from "body-parser";
 import express from "express";
 import productsRouter from "./routers/productsRouter.js";
+import cors from "cors";
 
 const app = express();
+
+app.use(cors({
+  origin: "http://localhost:5173"
+}));
 
 app.use(bodyParser.json());
 
