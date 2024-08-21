@@ -1,27 +1,27 @@
 import express from "express";
-import dummyProducts from "../dummyData/products.js";
+import DUMMY_PRODUCTS from "../dummyData/products.js";
 
 const productsRouter = express.Router();
 
 productsRouter.get("/", (_, res) => {
-  res.send(dummyProducts);
+  res.send(DUMMY_PRODUCTS);
 });
 
 productsRouter.post("/", (req, res) => {
   const newProduct = {
     ...req.body,
     postedAt: new Date(),
-    id: dummyProducts.length + 1,
+    id: DUMMY_PRODUCTS.length + 1,
   };
 
-  dummyProducts.push(newProduct);
+  DUMMY_PRODUCTS.push(newProduct);
 
   res.status(201).send(newProduct);
 });
 
 productsRouter.put("/:productId", (req, res) => {
   const productId = req.params.productId;
-  const productToUpdate = dummyProducts.find(
+  const productToUpdate = DUMMY_PRODUCTS.find(
     (product) => product.id == productId
   );
 
@@ -36,14 +36,14 @@ productsRouter.put("/:productId", (req, res) => {
 
 productsRouter.delete("/:productId", (req, res) => {
   const productId = req.params.productId;
-  const productToDeleteIndex = dummyProducts.findIndex(
+  const productToDeleteIndex = DUMMY_PRODUCTS.findIndex(
     (product) => product.id == productId
   );
 
   if (productToDeleteIndex === -1)
     return res.status(404).send("Product not found.");
 
-  const deletedProduct = dummyProducts.splice(productToDeleteIndex, 1);
+  const deletedProduct = DUMMY_PRODUCTS.splice(productToDeleteIndex, 1);
 
   res.send(deletedProduct[0]);
 });

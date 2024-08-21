@@ -1,14 +1,16 @@
+import DUMMY_USERS from "./users.js";
+
 const date = new Date();
 const currentMonth = date.getMonth();
 
 date.setMonth(currentMonth - 3);
 
-const dummyProducts = [
+const DUMMY_PRODUCTS = [
   {
     id: 1,
     name: "Product 1",
     price: 100,
-    postedBy: "User@email.com",
+    postedBy: DUMMY_USERS[0].id,
     postedAt: date,
     images: [
       "https://plus.unsplash.com/premium_photo-1684445034959-b3faeb4597d2?w=500&auto=format&fit=crop&q=60&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxzZWFyY2h8MzN8fHRhYmxlfGVufDB8fDB8fHww",
@@ -18,7 +20,7 @@ const dummyProducts = [
     id: 2,
     name: "Product 2",
     price: 200,
-    postedBy: "User2@email.com",
+    postedBy: DUMMY_USERS[1].id,
     postedAt: date,
     images: [
       "https://plus.unsplash.com/premium_photo-1705937171534-def8d344cf6b?q=80&w=1965&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D",
@@ -28,7 +30,7 @@ const dummyProducts = [
     id: 3,
     name: "Product 3",
     price: 300,
-    postedBy: "anotny@email.com",
+    postedBy: DUMMY_USERS[2].id,
     postedAt: date,
     description:
       "lorem ipsum dolor sit amet, consectetur adipiscing elit. lorem ipsum dolor sit amet, consectetur adipiscing elit. lorem ipsum dolor sit amet, consectetur adipiscing elit.",
@@ -41,7 +43,7 @@ const dummyProducts = [
     id: 4,
     name: "Book",
     price: 10.99,
-    postedBy: "anotny@email.com",
+    postedBy: DUMMY_USERS[1].id,
     postedAt: date,
     images: [
       "https://plus.unsplash.com/premium_photo-1667251760504-096946b820af?q=80&w=1974&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D",
@@ -52,7 +54,7 @@ const dummyProducts = [
     id: 5,
     name: "Product 5",
     price: 3.15,
-    postedBy: "anotny@email.com",
+    postedBy: DUMMY_USERS[2].id,
     postedAt: date,
     images: [
       "https://plus.unsplash.com/premium_photo-1678718713393-2b88cde9605b?q=80&w=2070&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D",
@@ -60,4 +62,4 @@ const dummyProducts = [
   },
 ];
 
-export default dummyProducts;
+export default DUMMY_PRODUCTS;
