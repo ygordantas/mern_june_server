@@ -10,7 +10,8 @@ const DUMMY_PRODUCTS = [
     id: 1,
     name: "Product 1",
     price: 100,
-    postedBy: DUMMY_USERS[0].id,
+    ownerId: DUMMY_USERS[0].id,
+    ownerEmail: DUMMY_USERS[0].email,
     postedAt: date,
     description:
       "It is a long established fact that a reader will be distracted by the readable content of a page when looking at its layout. The point of using Lorem Ipsum is that it has a more-or-less normal distribution of letters, as opposed to using 'Content here, content here'",
@@ -22,8 +23,8 @@ const DUMMY_PRODUCTS = [
     id: 2,
     name: "Product 2",
     price: 200,
-    postedBy: DUMMY_USERS[1].id,
-    postedAt: date,
+    ownerId: DUMMY_USERS[0].id,
+    ownerEmail: DUMMY_USERS[0].email,
     images: [
       "https://plus.unsplash.com/premium_photo-1705937171534-def8d344cf6b?q=80&w=1965&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D",
     ],
@@ -32,7 +33,8 @@ const DUMMY_PRODUCTS = [
     id: 3,
     name: "Product 3",
     price: 300,
-    postedBy: DUMMY_USERS[2].id,
+    ownerId: DUMMY_USERS[0].id,
+    ownerEmail: DUMMY_USERS[0].email,
     postedAt: date,
     description:
       "lorem ipsum dolor sit amet, consectetur adipiscing elit. lorem ipsum dolor sit amet, consectetur adipiscing elit. lorem ipsum dolor sit amet, consectetur adipiscing elit.",
@@ -45,7 +47,8 @@ const DUMMY_PRODUCTS = [
     id: 4,
     name: "Book",
     price: 10.99,
-    postedBy: DUMMY_USERS[1].id,
+    ownerId: DUMMY_USERS[2].id,
+    ownerEmail: DUMMY_USERS[2].email,
     postedAt: date,
     images: [
       "https://plus.unsplash.com/premium_photo-1667251760504-096946b820af?q=80&w=1974&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D",
@@ -56,7 +59,8 @@ const DUMMY_PRODUCTS = [
     id: 5,
     name: "Product 5",
     price: 3.15,
-    postedBy: DUMMY_USERS[2].id,
+    ownerId: DUMMY_USERS[1].id,
+    ownerEmail: DUMMY_USERS[1].email,
     postedAt: date,
     images: [
       "https://plus.unsplash.com/premium_photo-1678718713393-2b88cde9605b?q=80&w=2070&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D",

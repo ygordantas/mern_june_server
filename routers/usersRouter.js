@@ -9,7 +9,7 @@ usersRouter.get("/:userId/products", (req, res) => {
   if (!userId) return res.status(404).send("User not found.");
 
   const userProducts = DUMMY_PRODUCTS.filter(
-    (product) => product.postedBy == userId
+    (product) => product.ownerId == userId
   );
 
   res.send(userProducts);
