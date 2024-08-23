@@ -1,5 +1,6 @@
 import express from "express";
 import DUMMY_PRODUCTS from "../dummyData/products.js";
+import { PRODUCT_NOT_FOUND_MESSAGE } from "../constants/errorMessages.js";
 
 const productsRouter = express.Router();
 
@@ -24,7 +25,7 @@ productsRouter.get("/:productId", (req, res) => {
 
   const product = DUMMY_PRODUCTS.find((product) => product.id == productId);
 
-  if (!product) res.status(404).send("Product not found");
+  if (!product) res.status(404).send(PRODUCT_NOT_FOUND_MESSAGE);
 
   res.send(product);
 });
@@ -35,7 +36,7 @@ productsRouter.put("/:productId", (req, res) => {
     (product) => product.id == productId
   );
 
-  if (!productToUpdate) return res.status(404).send("Product not found.");
+  if (!productToUpdate) return res.status(404).send(PRODUCT_NOT_FOUND_MESSAGE);
 
   productToUpdate.name = req.body.name;
   productToUpdate.images = req.body.images;
@@ -51,7 +52,7 @@ productsRouter.delete("/:productId", (req, res) => {
   );
 
   if (productToDeleteIndex === -1)
-    return res.status(404).send("Product not found.");
+    return res.status(404).send(PRODUCT_NOT_FOUND_MESSAGE);
 
   const deletedProduct = DUMMY_PRODUCTS.splice(productToDeleteIndex, 1);
 
