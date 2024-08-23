@@ -19,6 +19,16 @@ productsRouter.post("/", (req, res) => {
   res.status(201).send(newProduct);
 });
 
+productsRouter.get("/:productId", (req, res) => {
+  const productId = req.params.productId;
+
+  const product = DUMMY_PRODUCTS.find((product) => product.id == productId);
+
+  if (!product) res.status(404).send("Product not found");
+
+  res.send(product);
+});
+
 productsRouter.put("/:productId", (req, res) => {
   const productId = req.params.productId;
   const productToUpdate = DUMMY_PRODUCTS.find(
