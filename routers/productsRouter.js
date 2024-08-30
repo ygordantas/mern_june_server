@@ -1,61 +1,126 @@
 import express from "express";
-import { PRODUCT_NOT_FOUND_MESSAGE } from "../constants/errorMessages.js";
+import {
+  USER_NOT_FOUND_MESSAGE,
+  PRODUCT_NOT_FOUND_MESSAGE,
+} from "../constants/errorMessages.js";
+import Product from "../models/Product.js";
+import User from "../models/User.js";
+import mongoose from "mongoose";
 
 const productsRouter = express.Router();
 
-productsRouter.get("/", (_, res) => {
-  res.send(DUMMY_PRODUCTS);
+productsRouter.get("/", async (_, res) => {
+  try {
+    const products = await Product.find();
+    return res.send(products);
+  } catch (error) {
+    return res.status(500).send(error);
+  }
 });
 
-productsRouter.post("/", (req, res) => {
-  const newProduct = {
-    ...req.body,
-    postedAt: new Date(),
-    id: DUMMY_PRODUCTS.length + 1,
-  };
+productsRouter.post("/", async (req, res) => {
+  try {
+    const session = await mongoose.startSession();
+    session.startTransaction();
 
-  DUMMY_PRODUCTS.push(newProduct);
+    const user = await User.findById(req.body.ownerId);
 
-  res.status(201).send(newProduct);
+    if (!user) {
+      return res.status(404).send(USER_NOT_FOUND_MESSAGE);
+    }
+    const timestamp = new Date();
+
+    const newProduct = new Product({
+      name: req.body.name,
+      price: req.body.price,
+      description: req.body.description,
+      ownerEmail: user.email,
+      ownerId: req.body.ownerId,
+      postedAt: timestamp,
+      lastUpdatedAt: timestamp,
+    });
+
+    await newProduct.save({ session });
+
+    user.products.push(newProduct);
+
+    await user.save({ session });
+
+    await session.commitTransaction();
+
+    return res.status(201).send(newProduct);
+  } catch (error) {
+    return res.status(500).send(error);
+  }
 });
 
-productsRouter.get("/:productId", (req, res) => {
-  const productId = req.params.productId;
+productsRouter.get("/:productId", async (req, res) => {
+  try {
+    const product = await Product.findById(req.params.productId);
 
-  const product = DUMMY_PRODUCTS.find((product) => product.id == productId);
+    if (!product) {
+      return res.status(404).send(PRODUCT_NOT_FOUND_MESSAGE);
+    }
 
-  if (!product) res.status(404).send(PRODUCT_NOT_FOUND_MESSAGE);
-
-  res.send(product);
+    return res.send(product);
+  } catch (error) {
+    return res.status(500).send(error);
+  }
 });
 
-productsRouter.put("/:productId", (req, res) => {
-  const productId = req.params.productId;
-  const productToUpdate = DUMMY_PRODUCTS.find(
-    (product) => product.id == productId
-  );
+productsRouter.put("/:productId", async (req, res) => {
+  try {
+    const productId = req.params.productId;
+    const product = await Product.findByIdAndUpdate(
+      productId,
+      {
+        name: req.body.name,
+        price: req.body.price,
+        description: req.body.description,
+        lastUpdatedAt: new Date(),
+      },
+      {
+        new: true,
+      }
+    );
 
-  if (!productToUpdate) return res.status(404).send(PRODUCT_NOT_FOUND_MESSAGE);
-
-  productToUpdate.name = req.body.name;
-  productToUpdate.images = req.body.images;
-  productToUpdate.price = req.body.price;
-
-  res.send(productToUpdate);
+    if (!product) {
+      return res.status(404).send(PRODUCT_NOT_FOUND_MESSAGE);
+    }
+    return res.send(product);
+  } catch (error) {
+    return res.status(500).send(error);
+  }
 });
 
-productsRouter.delete("/:productId", (req, res) => {
-  const productId = req.params.productId;
-  const productToDeleteIndex = DUMMY_PRODUCTS.findIndex(
-    (product) => product.id == productId
-  );
+productsRouter.delete("/:productId", async (req, res) => {
+  try {
+    const session = await mongoose.startSession();
+    session.startTransaction();
 
-  if (productToDeleteIndex === -1)
-    return res.status(404).send(PRODUCT_NOT_FOUND_MESSAGE);
+    const product = await Product.findByIdAndDelete(
+      req.params.productId
+    ).session(session);
 
-  const deletedProduct = DUMMY_PRODUCTS.splice(productToDeleteIndex, 1);
+    if (!product) {
+      return res.status(404).send(PRODUCT_NOT_FOUND_MESSAGE);
+    }
 
-  res.send(deletedProduct[0]);
+    const user = await User.findById(product.ownerId);
+
+    if (!user) {
+      return res.status(404).send(USER_NOT_FOUND_MESSAGE);
+    }
+
+    user.products.pull(product);
+
+    await user.save({ session });
+    await session.commitTransaction();
+
+    return res.send(product);
+  } catch (error) {
+    return res.status(500).send(error);
+  }
 });
 
 export default productsRouter;

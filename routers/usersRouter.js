@@ -10,19 +10,10 @@ usersRouter.get("/:userId/products", async (req, res) => {
   const userId = req.params.userId;
 
   try {
-    const user = await User.findById(userId);
-
-    if (!user) res.status(404).send(USER_NOT_FOUND_MESSAGE);
-
-    if (user.products.length === 0) {
-      return res.send([]);
-    }
-
-    const products = user.products.map(
-      async (productId) => await Product.findById(productId)
-    );
-
-    return res.send(products);
+    const userProducts = await Product.find({
+      ownerId: userId,
+    });
+    return res.send(userProducts);
   } catch (error) {
     return res.status(500).send(error);
   }
@@ -60,13 +51,15 @@ usersRouter.post("/", async (req, res) => {
     address,
   } = req.body;
 
+  const normalizedEmail = email.trim().toLowerCase();
+
   if (password !== repeatPassword) {
     res.status(400).send("Passwords don't match.");
     return;
   }
 
   try {
-    const user = await User.findOne({ email: email });
+    const user = await User.findOne({ email: normalizedEmail });
 
     if (user) {
       res.status(400).send("An user with the provided email already exists.");
@@ -74,9 +67,9 @@ usersRouter.post("/", async (req, res) => {
     }
 
     const newUser = new User({
-      firstName,
-      lastName,
-      email,
+      firstName: firstName.trim(),
+      lastName: lastName.trim(),
+      email: normalizedEmail,
       dateOfBirth,
       password,
       address,
@@ -84,10 +77,26 @@ usersRouter.post("/", async (req, res) => {
 
     await newUser.save();
 
-    return res.status(201).send({ id: newUser.id, email: newUser.email });
+    return res.status(201).send({ id: newUser.id });
   } catch (error) {
     res.status(500).send(error);
     return;
+  }
+});
+
+usersRouter.post("/login", async (req, res) => {
+  try {
+    const user = await User.findOne({
+      email: req.body.email,
+      password: req.body.password,
+    });
+
+    if (!user) {
+      return res.status(401).send("Invalid credentials");
+    }
+    return res.send({ id: user.id });
+  } catch (error) {
+    return res.status(500).send(error);
   }
 });
 
