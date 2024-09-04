@@ -6,6 +6,7 @@ import {
 import Product from "../models/Product.js";
 import User from "../models/User.js";
 import mongoose from "mongoose";
+import imageUpload from "../middlewares/imageUpload.js";
 
 const productsRouter = express.Router();
 
@@ -18,7 +19,7 @@ productsRouter.get("/", async (_, res) => {
   }
 });
 
-productsRouter.post("/", async (req, res) => {
+productsRouter.post("/", imageUpload.array("images"), async (req, res) => {
   try {
     const session = await mongoose.startSession();
     session.startTransaction();
@@ -38,6 +39,7 @@ productsRouter.post("/", async (req, res) => {
       ownerId: req.body.ownerId,
       postedAt: timestamp,
       lastUpdatedAt: timestamp,
+      images: req.files.map((file) => `/uploads/images/${file.filename}`),
     });
 
     await newProduct.save({ session });
