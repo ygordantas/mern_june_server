@@ -16,6 +16,8 @@ app.use(
 
 app.use(bodyParser.json());
 
+app.use("/uploads/images", express.static(`${process.cwd()}/uploads/images`))
+
 app.use("/products", productsRouter);
 
 app.use("/users", usersRouter);
