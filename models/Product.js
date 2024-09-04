@@ -11,6 +11,12 @@ const productSchema = new mongoose.Schema({
   ownerEmail: { type: String, required: true },
 });
 
+productSchema.method("toJSON", function () {
+  const { _id, __v, ...product } = this.toObject();
+  product.id = _id;
+  return product;
+});
+
 const Product = mongoose.model("Product", productSchema);
 
 export default Product;
