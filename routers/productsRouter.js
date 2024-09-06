@@ -7,6 +7,7 @@ import Product from "../models/Product.js";
 import User from "../models/User.js";
 import mongoose from "mongoose";
 import imageUpload from "../middlewares/imageUpload.js";
+import fs from "fs";
 
 const productsRouter = express.Router();
 
@@ -70,30 +71,37 @@ productsRouter.get("/:productId", async (req, res) => {
   }
 });
 
-productsRouter.put("/:productId", async (req, res) => {
-  try {
-    const productId = req.params.productId;
-    const product = await Product.findByIdAndUpdate(
-      productId,
-      {
-        name: req.body.name,
-        price: req.body.price,
-        description: req.body.description,
-        lastUpdatedAt: new Date(),
-      },
-      {
-        new: true,
-      }
-    );
+productsRouter.put(
+  "/:productId",
+  imageUpload.array("images"),
+  async (req, res) => {
+    try {
+      const productId = req.params.productId;
 
-    if (!product) {
-      return res.status(404).send(PRODUCT_NOT_FOUND_MESSAGE);
+      const product = await Product.findById(productId);
+
+      if (!product) {
+        return res.status(404).send(PRODUCT_NOT_FOUND_MESSAGE);
+      }
+
+      product.name = req.body.name;
+      product.price = req.body.price;
+      product.description = req.body.description;
+      product.lastUpdatedAt = new Date();
+      product.name = req.body.name;
+      product.images = [
+        ...product.images,
+        ...req.files.map((file) => `/uploads/images/${file.filename}`),
+      ];
+
+      await product.save();
+
+      return res.send(product);
+    } catch (error) {
+      return res.status(500).send(error);
     }
-    return res.send(product);
-  } catch (error) {
-    return res.status(500).send(error);
   }
-});
+);
 
 productsRouter.delete("/:productId", async (req, res) => {
   try {
@@ -118,6 +126,47 @@ productsRouter.delete("/:productId", async (req, res) => {
 
     await user.save({ session });
     await session.commitTransaction();
+
+    if (product.images.length > 0) {
+      product.images.forEach((imagePath) =>
+        fs.unlinkSync(`${process.cwd()}${imagePath}`)
+      );
+    }
+
+    return res.send(product);
+  } catch (error) {
+    return res.status(500).send(error);
+  }
+});
+
+productsRouter.delete("/:productId/images/:imageName", async (req, res) => {
+  try {
+    const product = await Product.findById(req.params.productId);
+
+    if (!product) {
+      return res.status(404).send(PRODUCT_NOT_FOUND_MESSAGE);
+    }
+
+    const imageToDeleteIndex = product.images.findIndex((imagePath) => {
+      const splitted = imagePath.split("/");
+      const fileName = splitted.pop();
+
+      return fileName === req.params.imageName;
+    });
+
+    if (imageToDeleteIndex === -1) {
+      return res
+        .status(404)
+        .send("Image with the provided name was not found.");
+    }
+
+    const copy = [...product.images];
+    fs.unlinkSync(`${process.cwd()}${copy[imageToDeleteIndex]}`);
+
+    copy.splice(imageToDeleteIndex, 1);
+    product.images = copy;
+
+    await product.save();
 
     return res.send(product);
   } catch (error) {
