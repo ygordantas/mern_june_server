@@ -3,6 +3,7 @@ import userValidator from "../validators/userValidator.js";
 import { USER_NOT_FOUND_MESSAGE } from "../constants/errorMessages.js";
 import User from "../models/User.js";
 import Product from "../models/Product.js";
+import bcrypt from "bcryptjs";
 
 const usersRouter = express.Router();
 
@@ -66,12 +67,14 @@ usersRouter.post("/", async (req, res) => {
       return;
     }
 
+    const hashedPassword = await bcrypt.hash(password, 12);
+
     const newUser = new User({
       firstName: firstName.trim(),
       lastName: lastName.trim(),
       email: normalizedEmail,
       dateOfBirth,
-      password,
+      password: hashedPassword,
       address,
     });
 
@@ -85,15 +88,24 @@ usersRouter.post("/", async (req, res) => {
 });
 
 usersRouter.post("/login", async (req, res) => {
+  const normalizedEmail = req.body.email.trim().toLowerCase();
+  const password = req.body.password;
+
   try {
     const user = await User.findOne({
-      email: req.body.email,
-      password: req.body.password,
+      email: normalizedEmail,
     });
 
     if (!user) {
+      return res.status(404).send(USER_NOT_FOUND_MESSAGE);
+    }
+
+    const isValidPassword = await bcrypt.compare(password, user.password);
+
+    if (!isValidPassword) {
       return res.status(401).send("Invalid credentials");
     }
+
     return res.send({ id: user.id });
   } catch (error) {
     return res.status(500).send(error);
