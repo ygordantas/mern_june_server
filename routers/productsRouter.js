@@ -8,13 +8,29 @@ import User from "../models/User.js";
 import mongoose from "mongoose";
 import imageUpload from "../middlewares/imageUpload.js";
 import fs from "fs";
+import checkAuth from "../middlewares/auth.js";
 
 const productsRouter = express.Router();
+
+productsRouter.use(checkAuth);
 
 productsRouter.get("/", async (_, res) => {
   try {
     const products = await Product.find();
     return res.send(products);
+  } catch (error) {
+    return res.status(500).send(error);
+  }
+});
+
+productsRouter.get("/users/:userId", async (req, res) => {
+  const userId = req.params.userId;
+
+  try {
+    const userProducts = await Product.find({
+      ownerId: userId,
+    });
+    return res.send(userProducts);
   } catch (error) {
     return res.status(500).send(error);
   }
@@ -84,6 +100,12 @@ productsRouter.put(
         return res.status(404).send(PRODUCT_NOT_FOUND_MESSAGE);
       }
 
+      if (product.ownerId.toString() !== req.userData.id) {
+        return res
+          .status(401)
+          .send("Request user id is not the owner of the product");
+      }
+
       product.name = req.body.name;
       product.price = req.body.price;
       product.description = req.body.description;
@@ -98,6 +120,7 @@ productsRouter.put(
 
       return res.send(product);
     } catch (error) {
+      console.log(error);
       return res.status(500).send(error);
     }
   }
@@ -114,6 +137,12 @@ productsRouter.delete("/:productId", async (req, res) => {
 
     if (!product) {
       return res.status(404).send(PRODUCT_NOT_FOUND_MESSAGE);
+    }
+
+    if (product.ownerId.toString() !== req.userData.id) {
+      return res
+        .status(401)
+        .send("Request user id is not the owner of the product");
     }
 
     const user = await User.findById(product.ownerId);
@@ -145,6 +174,12 @@ productsRouter.delete("/:productId/images/:imageName", async (req, res) => {
 
     if (!product) {
       return res.status(404).send(PRODUCT_NOT_FOUND_MESSAGE);
+    }
+
+    if (product.ownerId.toString() !== req.userData.id) {
+      return res
+        .status(401)
+        .send("Request user id is not the owner of the product");
     }
 
     const imageToDeleteIndex = product.images.findIndex((imagePath) => {
