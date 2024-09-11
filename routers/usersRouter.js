@@ -2,23 +2,10 @@ import express from "express";
 import userValidator from "../validators/userValidator.js";
 import { USER_NOT_FOUND_MESSAGE } from "../constants/errorMessages.js";
 import User from "../models/User.js";
-import Product from "../models/Product.js";
 import bcrypt from "bcryptjs";
+import jwt from "jsonwebtoken";
 
 const usersRouter = express.Router();
-
-usersRouter.get("/:userId/products", async (req, res) => {
-  const userId = req.params.userId;
-
-  try {
-    const userProducts = await Product.find({
-      ownerId: userId,
-    });
-    return res.send(userProducts);
-  } catch (error) {
-    return res.status(500).send(error);
-  }
-});
 
 usersRouter.get("/:userId", async (req, res) => {
   const userId = req.params.userId;
@@ -80,7 +67,11 @@ usersRouter.post("/", async (req, res) => {
 
     await newUser.save();
 
-    return res.status(201).send({ id: newUser.id });
+    const token = jwt.sign({ id: newUser.id }, process.env.JWT_KEY, {
+      expiresIn: "1h",
+    });
+
+    return res.status(201).send({ id: newUser.id, token });
   } catch (error) {
     res.status(500).send(error);
     return;
@@ -106,7 +97,11 @@ usersRouter.post("/login", async (req, res) => {
       return res.status(401).send("Invalid credentials");
     }
 
-    return res.send({ id: user.id });
+    const token = jwt.sign({ id: user.id }, process.env.JWT_KEY, {
+      expiresIn: "1h",
+    });
+
+    return res.send({ id: user.id, token });
   } catch (error) {
     return res.status(500).send(error);
   }

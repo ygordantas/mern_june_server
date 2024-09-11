@@ -8,8 +8,11 @@ import User from "../models/User.js";
 import mongoose from "mongoose";
 import imageUpload from "../middlewares/imageUpload.js";
 import fs from "fs";
+import checkAuth from "../middlewares/auth.js";
 
 const productsRouter = express.Router();
+
+productsRouter.use(checkAuth);
 
 productsRouter.get("/", async (_, res) => {
   try {
@@ -20,38 +23,14 @@ productsRouter.get("/", async (_, res) => {
   }
 });
 
-productsRouter.post("/", imageUpload.array("images"), async (req, res) => {
+productsRouter.get("/users/:userId", async (req, res) => {
+  const userId = req.params.userId;
+
   try {
-    const session = await mongoose.startSession();
-    session.startTransaction();
-
-    const user = await User.findById(req.body.ownerId);
-
-    if (!user) {
-      return res.status(404).send(USER_NOT_FOUND_MESSAGE);
-    }
-    const timestamp = new Date();
-
-    const newProduct = new Product({
-      name: req.body.name,
-      price: req.body.price,
-      description: req.body.description,
-      ownerEmail: user.email,
-      ownerId: req.body.ownerId,
-      postedAt: timestamp,
-      lastUpdatedAt: timestamp,
-      images: req.files.map((file) => `/uploads/images/${file.filename}`),
+    const userProducts = await Product.find({
+      ownerId: userId,
     });
-
-    await newProduct.save({ session });
-
-    user.products.push(newProduct);
-
-    await user.save({ session });
-
-    await session.commitTransaction();
-
-    return res.status(201).send(newProduct);
+    return res.send(userProducts);
   } catch (error) {
     return res.status(500).send(error);
   }
@@ -71,6 +50,48 @@ productsRouter.get("/:productId", async (req, res) => {
   }
 });
 
+productsRouter.post("/", imageUpload.array("images"), async (req, res) => {
+  try {
+    const session = await mongoose.startSession();
+    session.startTransaction();
+
+    const ownerId = req.userData.id;
+
+    const user = await User.findById(ownerId);
+
+    if (!user) {
+      return res.status(404).send(USER_NOT_FOUND_MESSAGE);
+    }
+    const timestamp = new Date();
+
+    const newProduct = new Product({
+      name: req.body.name,
+      price: req.body.price,
+      description: req.body.description,
+      ownerEmail: user.email,
+      ownerId,
+      postedAt: timestamp,
+      lastUpdatedAt: timestamp,
+      images: req.files
+        ? req.files.map((file) => `/uploads/images/${file.filename}`)
+        : [],
+    });
+
+    await newProduct.save({ session });
+
+    user.products.push(newProduct);
+
+    await user.save({ session });
+
+    await session.commitTransaction();
+
+    return res.status(201).send(newProduct);
+  } catch (error) {
+    console.log(error);
+    return res.status(500).send(error);
+  }
+});
+
 productsRouter.put(
   "/:productId",
   imageUpload.array("images"),
@@ -84,20 +105,32 @@ productsRouter.put(
         return res.status(404).send(PRODUCT_NOT_FOUND_MESSAGE);
       }
 
+      const ownerId = req.userData.id;
+
+      if (product.ownerId.toString() !== ownerId) {
+        return res
+          .status(401)
+          .send("User is not authorized to perform this action");
+      }
+
       product.name = req.body.name;
       product.price = req.body.price;
       product.description = req.body.description;
       product.lastUpdatedAt = new Date();
       product.name = req.body.name;
-      product.images = [
-        ...product.images,
-        ...req.files.map((file) => `/uploads/images/${file.filename}`),
-      ];
+
+      if (req.files && req.files.length > 0) {
+        product.images = [
+          ...product.images,
+          ...req.files.map((file) => `/uploads/images/${file.filename}`),
+        ];
+      }
 
       await product.save();
 
       return res.send(product);
     } catch (error) {
+      console.log(error);
       return res.status(500).send(error);
     }
   }
@@ -111,6 +144,16 @@ productsRouter.delete("/:productId", async (req, res) => {
     const product = await Product.findByIdAndDelete(
       req.params.productId
     ).session(session);
+
+    const ownerId = req.userData.id;
+
+    if (product.ownerId.toString() !== ownerId) {
+      await session.abortTransaction();
+      await session.endSession();
+      return res
+        .status(401)
+        .send("User is not authorized to perform this action");
+    }
 
     if (!product) {
       return res.status(404).send(PRODUCT_NOT_FOUND_MESSAGE);
@@ -145,6 +188,14 @@ productsRouter.delete("/:productId/images/:imageName", async (req, res) => {
 
     if (!product) {
       return res.status(404).send(PRODUCT_NOT_FOUND_MESSAGE);
+    }
+
+    const ownerId = req.userData.id;
+
+    if (product.ownerId.toString() !== ownerId) {
+      return res
+        .status(401)
+        .send("User is not authorized to perform this action");
     }
 
     const imageToDeleteIndex = product.images.findIndex((imagePath) => {
